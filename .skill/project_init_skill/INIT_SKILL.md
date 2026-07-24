@@ -66,7 +66,10 @@ cd my-server-app
     "@midwayjs/cli": "^2.1.0",
     "@midwayjs/mock": "^3.19.0",
     "@types/node": "^20.17.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
     "cross-env": "^7.0.3",
+    "eslint": "^8.57.0",
     "typescript": "~5.5.0"
   },
   "engines": {
@@ -150,6 +153,7 @@ import * as validate from '@midwayjs/validate';
 import * as info from '@midwayjs/info';
 import { join } from 'path';
 import { DefaultErrorFilter, NotFoundFilter } from './filter/default.filter';
+import { ReportMiddleware } from './middleware/report.middleware';
 
 @Configuration({
   imports: [
@@ -168,6 +172,8 @@ export class MainConfiguration {
   app: koa.Application;
 
   async onReady() {
+    // 注册全局中间件
+    this.app.useMiddleware([ReportMiddleware]);
     // 注册全局异常过滤器
     this.app.useFilter([NotFoundFilter, DefaultErrorFilter]);
   }
@@ -177,7 +183,7 @@ export class MainConfiguration {
 > ⚠️ 关键点：
 > - 使用 `@midwayjs/cross-domain` 组件处理跨域，**禁止**手动引入 `@koa/cors`
 > - `@midwayjs/info` 仅在 local 环境启用
-> - 全局 Filter 在 `onReady` 中注册
+> - 全局 Middleware 和 Filter 在 `onReady` 中注册，**中间件先于过滤器**
 
 ### 7. 创建配置文件
 
@@ -672,7 +678,84 @@ export class NotFoundFilter {
 }
 ```
 
-### 12. 创建 src/service/chat.service.ts（业务逻辑层）
+### 12. 创建 src/middleware/report.middleware.ts（请求日志中间件）
+
+```ts
+/**
+ * 请求日志中间件
+ * @description 记录每个 HTTP 请求的方法、路径、状态码、耗时，便于问题排查和性能监控
+ */
+import { Middleware, IMiddleware } from '@midwayjs/core';
+import { NextFunction, Context } from '@midwayjs/koa';
+
+@Middleware()
+export class ReportMiddleware implements IMiddleware<Context, NextFunction> {
+  resolve() {
+    return async (ctx: Context, next: NextFunction) => {
+      const startTime = Date.now();
+      await next();
+      const cost = Date.now() - startTime;
+
+      const isStream = ctx.response.get('Content-Type')?.includes('text/event-stream');
+      ctx.logger.info(
+        '[HTTP] %s %s %s %dms%s',
+        ctx.method,
+        ctx.url,
+        ctx.status,
+        cost,
+        isStream ? ' [SSE]' : ''
+      );
+    };
+  }
+
+  /** 忽略健康检查接口（避免日志刷屏） */
+  ignore(ctx: Context): boolean {
+    return ctx.path === '/api/health';
+  }
+
+  static getName(): string {
+    return 'report';
+  }
+}
+```
+
+### 13. 创建 .eslintrc.json（代码规范检查）
+
+```json
+{
+  "root": true,
+  "env": {
+    "node": true,
+    "es2021": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "prefer-const": "error",
+    "no-var": "error",
+    "eqeqeq": ["error", "always"],
+    "curly": ["error", "all"]
+  },
+  "ignorePatterns": ["dist/", "node_modules/", "bootstrap.js"]
+}
+```
+
+> ⚠️ ESLint 用 8.x 版本（传统 `.eslintrc.json` 格式），不用 9.x 的 flat config。
+
+### 14. 创建 src/service/chat.service.ts（业务逻辑层）
 
 ```ts
 /**
@@ -780,7 +863,7 @@ export class ChatService {
 }
 ```
 
-### 13. 创建 src/controller/health.controller.ts
+### 15. 创建 src/controller/health.controller.ts
 
 ```ts
 /**
@@ -817,7 +900,7 @@ export class HealthController {
 }
 ```
 
-### 14. 创建 src/controller/chat.controller.ts
+### 16. 创建 src/controller/chat.controller.ts
 
 ```ts
 /**
@@ -859,13 +942,13 @@ export class ChatController {
 }
 ```
 
-### 15. 安装依赖
+### 17. 安装依赖
 
 ```bash
 npm install
 ```
 
-### 16. 初始化 Git 仓库
+### 18. 初始化 Git 仓库
 
 ```bash
 git init
@@ -911,9 +994,10 @@ my-server-app/
 ├── bootstrap.js                    ← 生产环境启动入口
 ├── package.json
 ├── tsconfig.json
+├── .eslintrc.json                  ← ESLint 代码规范配置
 ├── .gitignore
 └── src/
-    ├── configuration.ts            ← 应用入口配置（组件注册、Filter 注册）
+    ├── configuration.ts            ← 应用入口配置（组件、中间件、Filter 注册）
     ├── config/
     │   ├── config.default.ts       ← 默认配置（端口、跨域、校验、日志）
     │   ├── config.local.ts         ← 本地开发配置
@@ -923,6 +1007,8 @@ my-server-app/
     │   └── chat.controller.ts      ← 聊天接口（AG-UI 流式 + 简单模式）
     ├── service/
     │   └── chat.service.ts         ← 聊天业务逻辑（SSE 事件推送）
+    ├── middleware/
+    │   └── report.middleware.ts    ← 请求日志中间件
     ├── dto/
     │   └── chat.dto.ts             ← 请求参数校验
     ├── interface/

@@ -9,6 +9,7 @@ import * as validate from '@midwayjs/validate';
 import * as info from '@midwayjs/info';
 import { join } from 'path';
 import { DefaultErrorFilter, NotFoundFilter } from './filter/default.filter';
+import { ReportMiddleware } from './middleware/report.middleware';
 
 @Configuration({
   imports: [
@@ -27,6 +28,8 @@ export class MainConfiguration {
   app: koa.Application;
 
   async onReady() {
+    // 注册全局中间件
+    this.app.useMiddleware([ReportMiddleware]);
     // 注册全局异常过滤器
     this.app.useFilter([NotFoundFilter, DefaultErrorFilter]);
   }

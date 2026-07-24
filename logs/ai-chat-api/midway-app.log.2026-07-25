@@ -7,3 +7,4 @@
   headerSent: true
 }
 2026-07-25 05:39:04.519 INFO 37908 [ChatService] AG-UI stream started: threadId=4c19f757-076a-4fe4-b352-3ab41cdbaa1a, runId=7c7f400d-9eb2-479c-be13-6530bd4e785e, message=hello
+2026-07-25 05:58:24.114 INFO 33648 [-/::ffff:127.0.0.1/-/5ms GET /api/info] [HTTP] GET /api/info 200 1ms
