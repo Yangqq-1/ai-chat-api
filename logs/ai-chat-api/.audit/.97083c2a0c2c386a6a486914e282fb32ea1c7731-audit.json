@@ -1,0 +1,15 @@
+{
+  "keep": {
+    "days": true,
+    "amount": 7
+  },
+  "auditLog": "C:\\Users\\Administrator\\Desktop\\Code\\ai-chat-api\\logs\\ai-chat-api\\.audit\\.97083c2a0c2c386a6a486914e282fb32ea1c7731-audit.json",
+  "files": [
+    {
+      "date": 1784928969186,
+      "name": "C:\\Users\\Administrator\\Desktop\\Code\\ai-chat-api\\logs\\ai-chat-api\\midway-core.log.2026-07-25",
+      "hash": "3ce3f25980108e0278e8c960bce91ab5"
+    }
+  ],
+  "hashType": "md5"
+}

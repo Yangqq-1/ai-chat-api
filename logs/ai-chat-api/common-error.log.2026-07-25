@@ -1,0 +1,7 @@
+2026-07-25 05:38:52.585 ERROR 37908 [-//-/765ms POST /api/chat/agent] Error: read ECONNRESET
+    at TCP.onStreamRead (node:internal/stream_base_commons:218:20) {
+  errno: -4077,
+  code: 'ECONNRESET',
+  syscall: 'read',
+  headerSent: true
+}

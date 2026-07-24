@@ -1,0 +1,9 @@
+2026-07-25 05:38:51.840 INFO 37908 [ChatService] AG-UI stream started: threadId=96e80a72-ac7e-47c7-8b82-886448d88a71, runId=1dab104b-c567-470e-8921-a495271026e5, message=hello
+2026-07-25 05:38:52.585 ERROR 37908 [-//-/765ms POST /api/chat/agent] Error: read ECONNRESET
+    at TCP.onStreamRead (node:internal/stream_base_commons:218:20) {
+  errno: -4077,
+  code: 'ECONNRESET',
+  syscall: 'read',
+  headerSent: true
+}
+2026-07-25 05:39:04.519 INFO 37908 [ChatService] AG-UI stream started: threadId=4c19f757-076a-4fe4-b352-3ab41cdbaa1a, runId=7c7f400d-9eb2-479c-be13-6530bd4e785e, message=hello
